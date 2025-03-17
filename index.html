@@ -8,6 +8,25 @@
 </head>
 <body>
     <canvas id="canvas" width="600" height="600"></canvas>
-    <script src="game.ts"></script>
+    
+    <div class="settings-panel">
+        <h3 class="settings-title">Settings</h3>
+        <div class="settings-toggle">
+            <div class="toggle-switch">
+                <input type="checkbox" id="bloom-toggle">
+                <span class="toggle-slider"></span>
+            </div>
+            <label for="bloom-toggle">Bloom Effect</label>
+        </div>
+        <div class="settings-toggle">
+            <div class="toggle-switch">
+                <input type="checkbox" id="crt-toggle">
+                <span class="toggle-slider"></span>
+            </div>
+            <label for="crt-toggle">CRT Effect</label>
+        </div>
+    </div>
+    
+    <script src="game.ts" type="module"></script>
 </body>
 </html>
