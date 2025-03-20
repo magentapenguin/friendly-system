@@ -1,5 +1,5 @@
 // Game configuration settings
-export const size = 20;
+export const size = 60;
 export const animationSpeed = 5; // Controls overall animation speed
 
 // Get canvas and context
@@ -42,3 +42,7 @@ export const bloomCanvas = document.createElement('canvas');
 bloomCanvas.width = canvas.width;
 bloomCanvas.height = canvas.height;
 export const bloomCtx = bloomCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+export const AI_ENABLED = true; // Enable or disable AI
+
+export const GAME_TICK_INTERVAL = 40; // Interval in milliseconds for game ticks

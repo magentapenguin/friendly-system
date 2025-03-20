@@ -1,13 +1,14 @@
 #canvas {
     background-color: black;
     margin: 0 auto;
-    padding: 0.2em;
+    padding: 0;
     display: block;
 }
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    background: black;
 }
 
 .settings-panel {

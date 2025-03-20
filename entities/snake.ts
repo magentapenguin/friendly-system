@@ -8,6 +8,7 @@ export class Snake {
     visualY: number; // For smooth animation
     direction: Direction;
     collided: boolean = false;
+    shouldHighlight: boolean = false;
 
     draw(snakeBody: Snake[]) {
         // Smooth movement animation
@@ -69,7 +70,18 @@ export class Snake {
         );
         ctx.fill();
         ctx.closePath();
-
+        if (this.shouldHighlight) {
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(
+                this.visualX * size + size / 2,
+                this.visualY * size + size / 2,
+                size * 0.5,
+                0, Math.PI * 2
+            );
+            ctx.fill();
+            ctx.closePath();
+        }
         // If this is the head, draw eyes
         if (index === 0) {
             // Direction-based eye positioning
@@ -128,7 +140,7 @@ export class Snake {
                 0, Math.PI * 2
             );
             ctx.fill();
-
+            
             return;
         }
 
@@ -146,9 +158,10 @@ export class Snake {
         ctx.lineTo(connectedBody.visualX * size + size / 2, connectedBody.visualY * size + size / 2);
         ctx.strokeStyle = fillColor;
         // Adjust line width based on segment size
-        ctx.lineWidth = 20 * sizeModifier;
+        ctx.lineWidth = size * sizeModifier;
         ctx.stroke();
         ctx.closePath();
+
     }
 
     inspect() {
@@ -159,7 +172,18 @@ export class Snake {
         }
     }
 
-    constructor(previousSnake?: Snake) {
+    constructor(previousSnake?: Snake, copy: boolean = false) {
+        if (copy) {
+            if (!previousSnake) {
+                throw new Error('Cannot copy snake without a previous snake');
+            }
+            this.x = previousSnake.x;
+            this.y = previousSnake.y;
+            this.visualX = previousSnake.visualX;
+            this.visualY = previousSnake.visualY;
+            this.direction = previousSnake.direction;
+            return;
+        }
         this.x = Math.floor(columns / 2);
         this.y = Math.floor(rows / 2);
         this.visualX = this.x;

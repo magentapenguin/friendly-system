@@ -1,6 +1,12 @@
 import { Apple } from './entities/apple';
 import { Snake } from './entities/snake';
-import { ctx, canvas, size, rows, columns } from './config';
+import { ctx, canvas, size, rows, columns, 
+         INPUT_DISPLAY_DURATION, GAMEPAD_DEADZONE, 
+         GAMEPAD_COOLDOWN, visualEffects as configVisualEffects,
+         MIN_SWIPE_DISTANCE, bloomCanvas, bloomCtx, 
+         AI_ENABLED, 
+         GAME_TICK_INTERVAL} from './config';
+import * as AI from './ai';
 // Animation timing
 let lastTime = 0;
 
@@ -11,22 +17,8 @@ let score = 0;
 let flashEffect = false;
 let flashIntensity = 0;
 
-// Visual effects settings
-const visualEffects = {
-    bloom: {
-        enabled: false,
-        strength: 0.5,
-        threshold: 0.6,
-        radius: 8
-    },
-    crt: {
-        enabled: false,
-        scanlineIntensity: 0.1,
-        curvature: 0.2,
-        flickerIntensity: 0.03,
-        noiseIntensity: 0.1
-    }
-};
+// Visual effects settings - use the settings from config
+const visualEffects = configVisualEffects;
 
 // Settings UI elements
 const bloomToggle = document.getElementById('bloom-toggle') as HTMLInputElement;
@@ -60,10 +52,8 @@ document.querySelectorAll('.toggle-slider').forEach((slider, index) => {
 });
 
 // Create offscreen canvases for effect rendering
-const bloomCanvas = document.createElement('canvas');
 bloomCanvas.width = canvas.width;
 bloomCanvas.height = canvas.height;
-const bloomCtx = bloomCanvas.getContext('2d') as CanvasRenderingContext2D;
 
 // Score animation
 let displayScore = 0;
@@ -181,31 +171,35 @@ function drawUI() {
             let length = 0;
             switch (lastInputMethod) {
                 case 'arrowKeys':
-                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf('Arrow Keys');
-                    length = 'Arrow Keys'.length;
+                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf(' Arrow Keys ');
+                    length = ' Arrow Keys '.length;
                     break;
                 case 'wasd':
-                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf('WASD');
-                    length = 'WASD'.length;
+                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf(' WASD ');
+                    length = ' WASD '.length;
                     break;
                 case 'touch':
-                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf('Swipe');
-                    length = 'Swipe'.length;
+                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf(' Swipe ');
+                    length = ' Swipe '.length;
                     break;
                 case 'gamepad':
-                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf('Gamepad');
-                    length = 'Gamepad'.length;
+                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf(' Gamepad ');
+                    length = ' Gamepad '.length;
+                    break;
+                case 'ai':
+                    index = 'Controls: Arrow Keys / WASD / Swipe / Gamepad'.indexOf('Controls: ');
+                    length = 'Controls: '.length;
                     break;
             }
             // color, fade out
             ctx.fillStyle = `rgba(21, 255, 0, ${Math.min(1 - (Date.now() - lastInputTime) / INPUT_DISPLAY_DURATION,0.3)})`;
             // find the position of the highlighted text
             const text = 'Controls: Arrow Keys / WASD / Swipe / Gamepad';
+            const ypad = 5;
             const textWidth = ctx.measureText(text).width;
-            const textHeight = ctx.measureText(text).actualBoundingBoxDescent;
-            console.log(textWidth, textHeight);
-            const x = canvas.width - 10 - textWidth + ctx.measureText(text.slice(0, index)).width;
-            const y = 9;
+            const textHeight = ctx.measureText(text).actualBoundingBoxDescent + ctx.measureText(text).actualBoundingBoxAscent + ypad;
+            const x = (canvas.width - 10 - textWidth + ctx.measureText(text.slice(0, index)).width);
+            const y = 9- ypad/2;
             ctx.fillRect(x, y, ctx.measureText(text.slice(index, index + length)).width, textHeight);         
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
@@ -288,7 +282,6 @@ function inspect() {
 let lastInputMethod = 'keyboard'; // Default to keyboard
 let lastInputDisplay = '';
 let lastInputTime = 0;
-const INPUT_DISPLAY_DURATION = 2000; // How long to show the input method (2 seconds)
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'i') {
@@ -298,11 +291,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === ' ' && gameOver) {
         resetGame();
     }
-    
-    // Update input method tracker
-    lastInputMethod = 'keyboard';
-    lastInputTime = Date.now();
-    lastInputDisplay = 'Keyboard';
 });
 
 function resetGame() {
@@ -334,8 +322,6 @@ const snakeBody = [snake];
 let gamepads: Gamepad[] = [];
 let gamepadConnected = false;
 let gamepadLastUsed = 0;
-const GAMEPAD_DEADZONE = 0.5; // Minimum analog stick movement to register as input
-const GAMEPAD_COOLDOWN = 200; // Milliseconds between gamepad direction changes
 
 // Handle gamepad connections and disconnections
 window.addEventListener('gamepadconnected', (e) => {
@@ -505,6 +491,15 @@ draw();
 
 function move() {
     const head = snakeBody[0];
+    if (AI_ENABLED) {
+        // AI mode
+        const bestMove = AI.getNextMove(snakeBody, apples[0]);
+        inputQueue.push(AI.directionToKey(bestMove));
+        console.log('AI move:', bestMove);
+        lastInputMethod = 'ai';
+        lastInputTime = Date.now();
+        lastInputDisplay = 'AI';
+    }
     switch (inputQueue.shift()) {
         case 'ArrowUp':
             if (head.direction !== 'down') {
@@ -637,8 +632,11 @@ function checkApple() {
     }
 }
 
+var paused = true;
+
+
 function gameLoop() {
-    if (gameOver) return;
+    if (gameOver || paused) return;
     
     move();
     if (checkCollision()) {
@@ -647,7 +645,7 @@ function gameLoop() {
     checkApple();
 }
 
-setInterval(gameLoop, 200);
+setInterval(gameLoop, GAME_TICK_INTERVAL);
 
 const inputQueue = [] as string[];
 document.addEventListener('keydown', (e) => {
@@ -656,6 +654,9 @@ document.addEventListener('keydown', (e) => {
         lastInputMethod = 'arrowKeys';
         lastInputTime = Date.now();
         lastInputDisplay = 'Arrow Keys';
+    }
+    if (e.key === 'p') {
+        paused = !paused;
     }
     // Add WASD controls
     else if (e.key === 'w' || e.key === 'W') {
@@ -687,7 +688,6 @@ document.addEventListener('keydown', (e) => {
 // Touch controls
 let touchStartX = 0;
 let touchStartY = 0;
-const MIN_SWIPE_DISTANCE = 30; // Minimum distance for a swipe to be registered
 
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault(); // Prevent scrolling
