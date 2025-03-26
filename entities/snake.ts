@@ -1,4 +1,4 @@
-import { ctx, size, columns, rows, animationSpeed } from '../config';
+import { ctx, size, columns, rows, animationSpeed, AI_ENABLED } from '../config';
 import { Direction } from '../types';
 
 export class Snake {
@@ -24,7 +24,7 @@ export class Snake {
 
         const index = snakeBody.indexOf(this);
         // Calculate size modifier based on distance from head
-        const sizeModifier = Math.max(0.5, 1 - (index * 0.05)) - 0.1; // Decrease by 5% per segment, minimum 50% size
+        const sizeModifier = Math.max(0.5, 1 - index * 0.05) - 0.1; // Decrease by 5% per segment, minimum 50% size
 
         // Add wobble effect to snake body
         const time = Date.now() / 1000;
@@ -36,10 +36,19 @@ export class Snake {
         const offset = (size - adjustedSize) / 2;
 
         // Pulsing color when collided
-        const colorOffset = this.collided ? Math.abs(Math.sin(time * 10)) * 255 : 0;
-        const fillColor = this.collided ?
-            `rgb(${255 - colorOffset}, ${colorOffset}, 0)` :
-            `rgb(0, ${255 - (index * 10)}, 0)`;
+        const colorOffset = this.collided
+            ? Math.abs(Math.sin(time * 10)) * 255
+            : 0;
+        let fillColor: string;
+        if (AI_ENABLED) {
+            fillColor = this.collided
+                ? `rgb(${255 - colorOffset}, 0, ${colorOffset})`
+                : `rgb(0, 0, ${255 - index * 10})`;
+        } else {
+            fillColor = this.collided
+                ? `rgb(${255 - colorOffset}, ${colorOffset}, 0)`
+                : `rgb(0, ${255 - index * 10}, 0)`;
+        }
 
         // Add shadow for 3D effect
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
@@ -77,7 +86,8 @@ export class Snake {
                 this.visualX * size + size / 2,
                 this.visualY * size + size / 2,
                 size * 0.5,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.fill();
             ctx.closePath();
@@ -114,13 +124,15 @@ export class Snake {
                 this.visualX * size + size * eyeOffset1.x,
                 this.visualY * size + size * eyeOffset1.y,
                 size * 0.15,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.arc(
                 this.visualX * size + size * eyeOffset2.x,
                 this.visualY * size + size * eyeOffset2.y,
                 size * 0.15,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.fill();
 
@@ -131,16 +143,18 @@ export class Snake {
                 this.visualX * size + size * eyeOffset1.x,
                 this.visualY * size + size * eyeOffset1.y,
                 size * 0.07,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.arc(
                 this.visualX * size + size * eyeOffset2.x,
                 this.visualY * size + size * eyeOffset2.y,
                 size * 0.07,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.fill();
-            
+
             return;
         }
 
@@ -148,28 +162,33 @@ export class Snake {
         const connectedBody = snakeBody[index - 1];
         if (!connectedBody) return;
 
-        const dist = Math.sqrt(Math.pow(this.visualX - connectedBody.visualX, 2) + Math.pow(this.visualY - connectedBody.visualY, 2));
+        const dist = Math.sqrt(
+            Math.pow(this.visualX - connectedBody.visualX, 2) +
+                Math.pow(this.visualY - connectedBody.visualY, 2)
+        );
         if (dist > 1.5) {
             return;
         }
 
         ctx.beginPath();
         ctx.moveTo(wobbleX * size + size / 2, this.visualY * size + size / 2);
-        ctx.lineTo(connectedBody.visualX * size + size / 2, connectedBody.visualY * size + size / 2);
+        ctx.lineTo(
+            connectedBody.visualX * size + size / 2,
+            connectedBody.visualY * size + size / 2
+        );
         ctx.strokeStyle = fillColor;
         // Adjust line width based on segment size
         ctx.lineWidth = size * sizeModifier;
         ctx.stroke();
         ctx.closePath();
-
     }
 
     inspect() {
         return {
             x: this.x,
             y: this.y,
-            direction: this.direction
-        }
+            direction: this.direction,
+        };
     }
 
     constructor(previousSnake?: Snake, copy: boolean = false) {

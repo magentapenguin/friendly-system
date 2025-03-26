@@ -17,5 +17,12 @@ export interface Position {
     y: number;
 }
 
+export interface SizeInfo {
+    width: number;
+    height: number;
+    rows: number;
+    columns: number;
+}
+
 // Direction type
 export type Direction = 'up' | 'down' | 'left' | 'right';
