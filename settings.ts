@@ -1,6 +1,7 @@
 import { html } from './utils';
 import { togglePause } from './game';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { get } from 'http';
 
 export abstract class SettingsOption<T> {
     element: DocumentFragment;
@@ -198,6 +199,18 @@ settingsCloseButton.addEventListener('click', () => {
 
 document.getElementById('exit-button')?.addEventListener('click', () => {
     // exit the game
-    const currentWindow = getCurrentWindow();
-    currentWindow.close();
+    try {
+        getCurrentWindow().close();
+    }
+    catch (e) {
+        console.error('Error closing window:', e);
+    }
 })
+
+try {
+    getCurrentWindow()
+} catch (e) {
+    // If we can't get the current window, it might be because we're not in a Tauri environment
+    console.error('Error getting current window:', e);
+    document.getElementById('exit-button')?.remove();
+}
