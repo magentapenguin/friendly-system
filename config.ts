@@ -1,13 +1,11 @@
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { SizeInfo } from './types';
 import { addOption, BooleanOption, NumberOption, SliderOption } from './settings';
 // Automatically resize the canvas to fit the window
 // and maintain the aspect ratio of the game grid
 
-const currentWindow = getCurrentWindow();
-
 const resize = async () => {
-    const { width, height } = await currentWindow.innerSize();
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     canvas.width = Math.floor(width / size) * size;
     canvas.height = Math.floor(height / size) * size;
     rows = Math.floor(canvas.height / size);
@@ -21,8 +19,8 @@ const resize = async () => {
         })
     );
 };
-
-currentWindow.onResized(resize);
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 resize();
 
 const resizeCallbacks: ((size: SizeInfo) => void)[] = [];
