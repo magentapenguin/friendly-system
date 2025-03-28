@@ -24,7 +24,7 @@ export class Snake {
 
         const index = snakeBody.indexOf(this);
         // Calculate size modifier based on distance from head
-        const sizeModifier = Math.max(0.5, 1 - index * 0.05) - 0.1; // Decrease by 5% per segment, minimum 50% size
+        const sizeModifier = Math.max(0.3, 1 - index * 0.05) - 0.1; // Decrease by 5% per segment, minimum 30% size
 
         // Add wobble effect to snake body
         const time = Date.now() / 1000;
@@ -43,11 +43,11 @@ export class Snake {
         if (AI_ENABLED) {
             fillColor = this.collided
                 ? `rgb(${255 - colorOffset}, 0, ${colorOffset})`
-                : `rgb(0, 0, ${255 - index * 10})`;
+                : `rgb(0, 0, ${255 - Math.max(index * 10, 200)})`;
         } else {
             fillColor = this.collided
                 ? `rgb(${255 - colorOffset}, ${colorOffset}, 0)`
-                : `rgb(0, ${255 - index * 10}, 0)`;
+                : `rgb(0, ${255 - Math.max(index * 10, 200)}, 0)`;
         }
 
         // Add shadow for 3D effect
