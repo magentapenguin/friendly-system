@@ -21,7 +21,6 @@ const resize = async () => {
 };
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', resize);
-resize();
 
 const resizeCallbacks: ((size: SizeInfo) => void)[] = [];
 export const onResize = (callback: (size: SizeInfo) => void) => {
@@ -110,3 +109,4 @@ GAME_TICK_INTERVAL_OPTION.onChange((value) => {
 });
 
 addOption(GAME_TICK_INTERVAL_OPTION);
+resize();
