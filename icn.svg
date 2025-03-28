@@ -1,20 +1,53 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
-   width="128.0px"
-   height="128.0px"
-   viewBox="0 0 128.0 128.0"
+   viewBox="0 0 512 512"
    version="1.1"
-   id="SVGRoot"
+   id="svg18516"
    sodipodi:docname="icn.svg"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs18520">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient18830">
+      <stop
+         style="stop-color:#9150f1;stop-opacity:1;"
+         offset="0"
+         id="stop18826" />
+      <stop
+         style="stop-color:#4d50f1;stop-opacity:1;"
+         offset="0.25"
+         id="stop19197" />
+      <stop
+         style="stop-color:#44cbf1;stop-opacity:1;"
+         offset="0.5"
+         id="stop19199" />
+      <stop
+         style="stop-color:#69ffa1;stop-opacity:1;"
+         offset="0.75"
+         id="stop19201" />
+      <stop
+         style="stop-color:#86fe58;stop-opacity:1;"
+         offset="1"
+         id="stop18828" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient18830"
+       id="linearGradient18832"
+       x1="104.50401"
+       y1="25.943167"
+       x2="-142.66826"
+       y2="402.06512"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
   <sodipodi:namedview
-     id="namedview137"
+     id="namedview18518"
      pagecolor="#ffffff"
      bordercolor="#111111"
      borderopacity="1"
@@ -22,61 +55,46 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="px"
-     showgrid="true"
-     inkscape:zoom="5.9081369"
-     inkscape:cx="76.758546"
-     inkscape:cy="67.195464"
+     showgrid="false"
+     inkscape:zoom="0.57245266"
+     inkscape:cx="645.46822"
+     inkscape:cy="552.01071"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
-  <defs
-     id="defs132" />
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
-    <circle
-       style="fill:#64ff64;fill-opacity:0.70103091;stroke-width:10.8408;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="path11402"
-       cx="64"
-       cy="64"
-       r="64" />
-    <rect
-       style="fill:#00ff00;fill-opacity:1;stroke-width:5.14633;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="rect3894"
-       width="90.509666"
-       height="90.509666"
-       x="18.745167"
-       y="18.745167"
-       rx="3.5355339"
-       ry="3.5355339" />
-    <circle
-       style="fill:#ffffff;fill-opacity:1;stroke-width:14.5603;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="path6186"
-       cx="95.333229"
-       cy="26.462339"
-       r="12.450732" />
-    <circle
-       style="fill:#000000;fill-opacity:1;stroke-width:5.82411;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="path6186-9"
-       cx="95.333229"
-       cy="26.462339"
-       r="4.9802928" />
-    <circle
-       style="fill:#ffffff;fill-opacity:1;stroke-width:14.5603;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="path6186-3"
-       cx="95.333229"
-       cy="101.97088"
-       r="12.450732" />
-    <circle
-       style="fill:#000000;fill-opacity:1;stroke-width:5.82411;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
-       id="path6186-9-9"
-       cx="95.333229"
-       cy="101.97088"
-       r="4.9802928" />
-  </g>
+     inkscape:current-layer="svg18516" />
+  <!--!Font Awesome Pro 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.-->
+  <path
+     d="M 483.4,65.7 C 381.16669,-13.844809 259.06369,50.458497 172.29433,51.030157 92.794331,51.030157 14.706876,135.29373 14.706876,214.79373 14.706876,294.29373 96.5,352 176,352 h 144 c 0,0 35.17214,5.12613 32,32 -9.0651,54.2443 -56.47302,41.57116 -100.32328,46.20507 -59.40195,-0.0191 -97.38808,3.85727 -162.44777,9.22328 L 15.2,442.9 C 6.1,446 0,454.4 0,464 c 0,9.6 6.1,18 15.2,21.1 l 66,22 c 30.6379,8.32112 61.93946,4.9 94.7,4.9 h 0.1 144 c 70.7,0 128,-57.3 128,-128 0,-70.7 -57.3,-128 -128,-128 H 176 c -26.5,0 -48,-21.5 -48,-48 0,-26.5 22.73522,-27.00121 49.23522,-27.00121 C 303.46795,184.73994 386.25809,223.00068 483.3,158.3 509.01227,131.37666 512,89.412796 483.4,65.7 Z"
+     id="path18514"
+     sodipodi:nodetypes="ccsscccccsccccsssssccc"
+     style="fill:url(#linearGradient18832);fill-opacity:1" />
+  <ellipse
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke-width:9.26685;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
+     id="path25875"
+     cx="368"
+     cy="66.825607"
+     rx="22.587196"
+     ry="22.587189" />
+  <ellipse
+     style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke-width:9.26685;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
+     id="path25875-2"
+     cx="368"
+     cy="157.17439"
+     rx="22.587196"
+     ry="22.587189" />
+  <circle
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:13.9032;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
+     id="path25951"
+     cx="370"
+     cy="66.825607"
+     r="9.6229267" />
+  <circle
+     style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:13.9032;stroke-linecap:round;stroke-linejoin:bevel;paint-order:stroke fill markers"
+     id="path25951-8"
+     cx="370"
+     cy="157.17439"
+     r="9.6229267" />
 </svg>

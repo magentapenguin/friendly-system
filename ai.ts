@@ -63,7 +63,7 @@ function moveSnake(snake: Snake[], direction: Direction): Snake[] {
 }
 
 export function getBestMove(snake: Snake[], apple: Apple): Direction {
-    const lookAhead = 5; // Number of moves to look ahead
+    const lookAhead = Math.max(Math.floor(snake.length / 2), 2); // Look ahead half the snake's length
     const possibleMoves: Direction[] = [];
     const snakeCopy = deepcopySnake(snake);
     const head = getHead(snakeCopy);

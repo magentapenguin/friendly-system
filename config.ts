@@ -1,5 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { SizeInfo } from './types';
+import { addOption, BooleanOption, NumberOption, SliderOption } from './settings';
 // Automatically resize the canvas to fit the window
 // and maintain the aspect ratio of the game grid
 
@@ -93,6 +94,21 @@ export function toggleAI(enabled?: boolean) {
 }
 
 // Timing settings
-export const GAME_TICK_INTERVAL = 200; // Define your target FPS
+export let GAME_TICK_INTERVAL = 400; // Define your target FPS
 export const TARGET_FPS = 60; // or whatever frame rate you want
 export const FRAME_INTERVAL = 1000 / TARGET_FPS; // milliseconds per frame
+
+export const GAME_TICK_INTERVAL_OPTION = new NumberOption(
+    'game_tick_interval',
+    'Game Tick Interval',
+    GAME_TICK_INTERVAL,
+    1,
+    1000,
+);
+
+GAME_TICK_INTERVAL_OPTION.onChange((value) => {
+    console.log('Game tick interval changed to:', value);
+    GAME_TICK_INTERVAL = value;
+});
+
+addOption(GAME_TICK_INTERVAL_OPTION);

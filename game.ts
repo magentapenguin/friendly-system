@@ -10,14 +10,16 @@ import {
     ctx,
     FRAME_INTERVAL,
     GAME_TICK_INTERVAL,
+    GAME_TICK_INTERVAL_OPTION,
     GAMEPAD_COOLDOWN,
     GAMEPAD_DEADZONE,
     INPUT_DISPLAY_DURATION,
     MIN_SWIPE_DISTANCE,
     rows,
     size,
-    toggleAI
+    toggleAI,
 } from './config';
+import * as SETTINGS from './settings';
 import * as AI from './ai';
 
 // Game state
@@ -31,55 +33,67 @@ let flashIntensity = 0;
 const visualEffects = configVisualEffects;
 
 // Settings UI elements
-const bloomToggle = document.getElementById('bloom-toggle') as HTMLInputElement;
-const crtToggle = document.getElementById('crt-toggle') as HTMLInputElement;
-const aiToggle = document.getElementById('ai-toggle') as HTMLInputElement;
+const bloomToggle = new SETTINGS.BooleanOption(
+    'bloomEnabled',
+    'Bloom Effect',
+    visualEffects.bloom.enabled
+);
+const crtToggle = new SETTINGS.BooleanOption(
+    'crtEnabled',
+    'CRT Effect',
+    visualEffects.crt.enabled
+);
+const aiToggle = new SETTINGS.BooleanOption('aiEnabled', 'AI Mode', AI_ENABLED);
+const showFPSCounter = new SETTINGS.BooleanOption(
+    'fpsCounter',
+    'Show FPS Counter',
+    false
+);
 if (localStorage.aiEnabled) {
-    aiToggle.checked = JSON.parse(localStorage.aiEnabled);
-    toggleAI(aiToggle.checked);
+    aiToggle.setValue(JSON.parse(localStorage.aiEnabled));
 }
 if (localStorage.bloomEnabled) {
-    bloomToggle.checked = JSON.parse(localStorage.bloomEnabled);
+    bloomToggle.setValue(JSON.parse(localStorage.bloomEnabled));
 }
 if (localStorage.crtEnabled) {
-    crtToggle.checked = JSON.parse(localStorage.crtEnabled);
+    crtToggle.setValue(JSON.parse(localStorage.crtEnabled));
+}
+if (localStorage.fpsCounter) {
+    showFPSCounter.setValue(JSON.parse(localStorage.fpsCounter));
 }
 
-
-// Initialize toggle states based on current settings
-bloomToggle.checked = visualEffects.bloom.enabled;
-crtToggle.checked = visualEffects.crt.enabled;
-
 // Add event listeners for toggles
-bloomToggle.addEventListener('change', () => {
-    visualEffects.bloom.enabled = bloomToggle.checked;
+bloomToggle.onChange((val) => {
+    visualEffects.bloom.enabled = val;
+    localStorage.setItem('bloomEnabled', JSON.stringify(val));
 });
 
-crtToggle.addEventListener('change', () => {
-    visualEffects.crt.enabled = crtToggle.checked;
+crtToggle.onChange((val) => {
+    visualEffects.crt.enabled = val;
+    localStorage.setItem('crtEnabled', JSON.stringify(val));
 });
 
-aiToggle.addEventListener('change', () => {
-    toggleAI(aiToggle.checked);
-    if (AI_ENABLED) {
+aiToggle.onChange((val) => {
+    toggleAI(val);
+    localStorage.setItem('aiEnabled', JSON.stringify(val));
+    if (val) {
         // Reset the snake to start AI mode
         resetGame();
     }
-})
-
-// Add click handlers for toggle sliders
-document.querySelectorAll('.toggle-slider').forEach((slider, index) => {
-    slider.addEventListener('click', () => {
-        // Find the associated checkbox
-        const checkbox = slider.previousElementSibling as HTMLInputElement;
-        // Toggle the checkbox
-        checkbox.checked = !checkbox.checked;
-
-        // Trigger the change event
-        const changeEvent = new Event('change', { bubbles: true });
-        checkbox.dispatchEvent(changeEvent);
-    });
 });
+
+showFPSCounter.onChange((val) => {
+    const fpsCounter = document.getElementById('fps-container');
+    if (fpsCounter) {
+        fpsCounter.style.display = val ? 'block' : 'none';
+    }
+    localStorage.setItem('fpsCounter', JSON.stringify(val));
+});
+
+SETTINGS.addOption(bloomToggle);
+SETTINGS.addOption(crtToggle);
+SETTINGS.addOption(aiToggle);
+SETTINGS.addOption(showFPSCounter);
 
 // Create offscreen canvases for effect rendering
 bloomCanvas.width = canvas.width;
@@ -526,6 +540,8 @@ function processGamepadInput() {
 // Tracking variable for the last frame time
 let lastFrameTime = 0;
 
+let lastFPSes: number[] = [];
+
 function draw(timestamp = 0) {
     // Request next frame right away
     requestAnimationFrame(draw);
@@ -591,11 +607,16 @@ function draw(timestamp = 0) {
         applyBloom();
         applyCrtEffect();
 
-        console.log('FPS:', Math.round(1000 / elapsed));
-        console.log('elapsed:', elapsed);
-
         let fps = Math.round(1000 / elapsed);
+        lastFPSes.push(fps);
+        if (lastFPSes.length > 10) {
+            lastFPSes.shift();
+        }
+        let avgfps = Math.round(
+            lastFPSes.reduce((acc, val) => acc + val, 0) / lastFPSes.length
+        );
         document.getElementById('fps-counter')!.innerText = `${fps}`;
+        document.getElementById('fps-avg')!.innerText = `${avgfps}`;
     }
 }
 
@@ -603,6 +624,13 @@ function draw(timestamp = 0) {
 draw();
 
 function move() {
+    // check if input queue is defined and not empty
+    try {
+        inputQueue.length;
+    } catch (e) {
+        console.warn('Input queue is not defined or empty:', e);
+        return;
+    }
     const head = snakeBody[0];
     if (AI_ENABLED) {
         // AI mode
@@ -744,7 +772,16 @@ function checkApple() {
     }
 }
 
-var paused = false;
+export var paused = false;
+
+export function togglePause(pause?: boolean) {
+    if (pause !== undefined) {
+        paused = pause;
+        return;
+    }
+    paused = !paused;
+}
+
 
 function gameLoop() {
     if (gameOver || paused) return;
@@ -756,7 +793,12 @@ function gameLoop() {
     checkApple();
 }
 
-setInterval(gameLoop, GAME_TICK_INTERVAL);
+let gameLoopScheduler = setInterval(gameLoop, GAME_TICK_INTERVAL);
+
+GAME_TICK_INTERVAL_OPTION.onChange((value) => {
+    clearInterval(gameLoopScheduler);
+    gameLoopScheduler = setInterval(gameLoop, value);
+});
 
 const inputQueue = [] as string[];
 document.addEventListener('keydown', (e) => {
@@ -765,9 +807,6 @@ document.addEventListener('keydown', (e) => {
         lastInputMethod = 'arrowKeys';
         lastInputTime = Date.now();
         lastInputDisplay = 'Arrow Keys';
-    }
-    if (e.key === 'p') {
-        paused = !paused;
     }
     // Add WASD controls
     else if (e.key === 'w' || e.key === 'W') {

@@ -1,0 +1,174 @@
+.settings-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    color: white;
+    background: none;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    z-index: 10;
+}
+.settings-button:hover {
+    color: #ddd;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.settings-panel {
+    position: absolute;
+    inset: 10%;
+    background-color: #222b;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+    font-family: Arial, sans-serif;
+    z-index: 10;
+}
+.settings-panel::after {
+    content: '\00A0'; /* Non-breaking space to prevent collapse */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    z-index: -1;
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    justify-content: space-between;
+    flex-direction: row-reverse;
+}
+
+.settings-toggle label {
+    cursor: pointer;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #2196F3;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+}
+
+.settings-title {
+    padding: 0 0 20px 0;
+    font-size: 16px;
+    text-align: center;
+    margin: 0;
+}
+
+.settings-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.settings-text span {
+    font-weight: bold;
+}
+
+.settings-input {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.settings-input input {
+    padding: 5px;
+    width: 60px;
+    height: 30px;
+    border: 1px solid #777;
+    border-radius: 4px;
+    background-color: #222;
+    color: white;
+}
+.settings-input label {
+    height: min-content;
+}
+input:focus-visible {
+    outline: none;
+    border-color: #2196F3;
+}
+.close-button {
+    float: right;
+    color: white;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 10;
+    vertical-align: top;
+}
+.close-button:hover {
+    color: #ddd;
+}
+.exit-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    left: 5px;
+    color: white;
+    background: none;
+    border: #7777 solid 1px;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    z-index: 10;
+}
+.exit-button:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-color: rgba(255, 0, 0, 0.5);
+}
+.exit-button:active {
+    background-color: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.7);
+}
