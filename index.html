@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snek</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="settings.css">
 </head>
+
 <body>
     <canvas id="canvas" width="600" height="600"></canvas>
-    
-    <div class="settings-panel">
-        <h3 class="settings-title">Settings</h3>
-        <div class="settings-toggle">
-            <div class="toggle-switch">
-                <input type="checkbox" id="bloom-toggle">
-                <span class="toggle-slider"></span>
-            </div>
-            <label for="bloom-toggle">Bloom Effect</label>
-        </div>
-        <div class="settings-toggle">
-            <div class="toggle-switch">
-                <input type="checkbox" id="crt-toggle">
-                <span class="toggle-slider"></span>
-            </div>
-            <label for="crt-toggle">CRT Effect</label>
-        </div>
+
+    <div class="settings-panel" id="settings-panel" hidden>
+        <h3 class="settings-title"><button id="settings-close" class="close-button">
+                <svg version="1.1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                    <g stroke="currentColor" stroke-width="20" fill="none" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="m29.123 29.123 69.753 69.753" />
+                        <path d="m98.877 29.123-69.753 69.753" />
+                    </g>
+                </svg>
+            </button> Settings</h3>
+        <button id="exit-button" class="exit-button">Exit</button>
     </div>
-    
+    <div id="fps-container">
+        FPS: <span id="fps-counter">0</span> AVG: <span id="fps-avg">0</span>
+    </div>
+    <button id="settings-button" class="settings-button">Settings</button>
+
     <script src="game.ts" type="module"></script>
 </body>
+
 </html>

@@ -1,4 +1,4 @@
-import { ctx, size, columns, rows } from '../config';
+import { ctx, size, columns, rows, onResize } from '../config';
 
 export class Apple {
     x: number;
@@ -32,8 +32,8 @@ export class Apple {
             ctx.fillStyle = 'red';
             ctx.beginPath();
             ctx.roundRect(
-                this.x * size + offset + size/2 * this.eatenProgress,
-                this.y * size + offset + size/2 * this.eatenProgress,
+                this.x * size + offset + (size / 2) * this.eatenProgress,
+                this.y * size + offset + (size / 2) * this.eatenProgress,
                 adjustedSize * eatScale,
                 adjustedSize * eatScale,
                 5 * eatScale
@@ -44,7 +44,13 @@ export class Apple {
         } else {
             ctx.fillStyle = 'red';
             ctx.beginPath();
-            ctx.roundRect(this.x * size + offset, this.y * size + offset, adjustedSize, adjustedSize, 5);
+            ctx.roundRect(
+                this.x * size + offset,
+                this.y * size + offset,
+                adjustedSize,
+                adjustedSize,
+                5
+            );
             ctx.fill();
             ctx.closePath();
 
@@ -58,7 +64,8 @@ export class Apple {
                 this.x * size + size * 0.7,
                 this.y * size + size * 0.3,
                 size * 0.2,
-                0, Math.PI * 2
+                0,
+                Math.PI * 2
             );
             ctx.fill();
 
@@ -79,12 +86,19 @@ export class Apple {
     inspect() {
         return {
             x: this.x,
-            y: this.y
-        }
+            y: this.y,
+        };
     }
 
     constructor() {
         this.x = Math.floor(Math.random() * columns);
         this.y = Math.floor(Math.random() * rows);
+        // Ensure apple is not placed outside the grid
+        onResize(
+            (({ rows, columns }) => {
+                if (this.x >= columns) this.x = columns - 1;
+                if (this.y >= rows) this.y = rows - 1;
+            }).bind(this)
+        );
     }
 }
