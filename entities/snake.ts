@@ -43,11 +43,11 @@ export class Snake {
         if (AI_ENABLED) {
             fillColor = this.collided
                 ? `rgb(${255 - colorOffset}, 0, ${colorOffset})`
-                : `rgb(0, 0, ${255 - Math.max(index * 10, 200)})`;
+                : `rgb(0, 0, ${255 - Math.min(index * 10, 200)})`;
         } else {
             fillColor = this.collided
                 ? `rgb(${255 - colorOffset}, ${colorOffset}, 0)`
-                : `rgb(0, ${255 - Math.max(index * 10, 200)}, 0)`;
+                : `rgb(0, ${255 - Math.min(index * 10, 200)}, 0)`;
         }
 
         // Add shadow for 3D effect

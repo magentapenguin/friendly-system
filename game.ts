@@ -36,64 +36,50 @@ const visualEffects = configVisualEffects;
 const bloomToggle = new SETTINGS.BooleanOption(
     'bloomEnabled',
     'Bloom Effect',
-    visualEffects.bloom.enabled
+    visualEffects.bloom.enabled,
+    true
 );
 const crtToggle = new SETTINGS.BooleanOption(
     'crtEnabled',
     'CRT Effect',
-    visualEffects.crt.enabled
+    visualEffects.crt.enabled,
+    true
 );
-const aiToggle = new SETTINGS.BooleanOption('aiEnabled', 'AI Mode', AI_ENABLED);
+const aiToggle = new SETTINGS.BooleanOption(
+    'aiEnabled',
+    'AI Mode',
+    AI_ENABLED,
+    true
+);
 const showFPSCounter = new SETTINGS.BooleanOption(
     'fpsCounter',
     'Show FPS Counter',
-    false
+    false,
+    true
 );
-if (localStorage.aiEnabled) {
-    aiToggle.setValue(JSON.parse(localStorage.aiEnabled));
-}
-if (localStorage.bloomEnabled) {
-    bloomToggle.setValue(JSON.parse(localStorage.bloomEnabled));
-}
-if (localStorage.crtEnabled) {
-    crtToggle.setValue(JSON.parse(localStorage.crtEnabled));
-}
-if (localStorage.fpsCounter) {
-    showFPSCounter.setValue(JSON.parse(localStorage.fpsCounter));
-}
-
-// Add event listeners for toggles
-bloomToggle.onChange((val) => {
-    visualEffects.bloom.enabled = val;
-    localStorage.setItem('bloomEnabled', JSON.stringify(val));
-});
-
-crtToggle.onChange((val) => {
-    visualEffects.crt.enabled = val;
-    localStorage.setItem('crtEnabled', JSON.stringify(val));
-});
-
-aiToggle.onChange((val) => {
-    toggleAI(val);
-    localStorage.setItem('aiEnabled', JSON.stringify(val));
-    if (val) {
-        // Reset the snake to start AI mode
-        resetGame();
-    }
-});
 
 showFPSCounter.onChange((val) => {
     const fpsCounter = document.getElementById('fps-container');
     if (fpsCounter) {
         fpsCounter.style.display = val ? 'block' : 'none';
     }
-    localStorage.setItem('fpsCounter', JSON.stringify(val));
 });
 
 SETTINGS.addOption(bloomToggle);
 SETTINGS.addOption(crtToggle);
 SETTINGS.addOption(aiToggle);
 SETTINGS.addOption(showFPSCounter);
+
+
+// Add event listeners for toggles
+bloomToggle.onChange((val) => {
+    visualEffects.bloom.enabled = val;
+});
+
+crtToggle.onChange((val) => {
+    visualEffects.crt.enabled = val;
+});
+
 
 // Create offscreen canvases for effect rendering
 bloomCanvas.width = canvas.width;
@@ -104,6 +90,14 @@ let displayScore = 0;
 let scoreAnimationActive = false;
 let scoreAnimationTime = 0;
 let scoreAnimationPosition = { x: 0, y: 0 };
+
+aiToggle.onChange((val) => {
+    toggleAI(val);
+    if (val) {
+        // Reset the snake to start AI mode
+        resetGame();
+    }
+});
 
 // Particle system
 interface Particle {
@@ -781,7 +775,6 @@ export function togglePause(pause?: boolean) {
     }
     paused = !paused;
 }
-
 
 function gameLoop() {
     if (gameOver || paused) return;

@@ -1,5 +1,5 @@
 import type { SizeInfo } from './types';
-import { addOption, BooleanOption, NumberOption, SliderOption } from './settings';
+import { addOption, NumberOption } from './settings';
 // Automatically resize the canvas to fit the window
 // and maintain the aspect ratio of the game grid
 
@@ -86,7 +86,7 @@ export const bloomCtx = bloomCanvas.getContext(
 
 export let AI_ENABLED = false; // Enable or disable AI
 export function toggleAI(enabled?: boolean) {
-    enabled = enabled !== undefined ? !AI_ENABLED : AI_ENABLED;
+    enabled = enabled === undefined ? !AI_ENABLED : enabled;
     AI_ENABLED = enabled;
 }
 
@@ -101,6 +101,8 @@ export const GAME_TICK_INTERVAL_OPTION = new NumberOption(
     GAME_TICK_INTERVAL,
     1,
     1000,
+    1,
+    true
 );
 
 GAME_TICK_INTERVAL_OPTION.onChange((value) => {
