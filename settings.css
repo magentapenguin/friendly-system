@@ -42,9 +42,16 @@
 .settings-toggle {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    padding: 8px 0;
     justify-content: space-between;
     flex-direction: row-reverse;
+    border: 1px solid #444;
+    box-sizing: content-box;
+    border-left-style: none;
+    border-right-style: none;
+}
+.settings-toggle:not(:last-child) {
+    border-bottom: none;
 }
 
 .settings-toggle label {
@@ -104,20 +111,35 @@ input:checked + .toggle-slider:before {
 }
 
 .settings-text {
+    border: 1px solid #444;
+    box-sizing: content-box;
+    border-left-style: none;
+    border-right-style: none;
+    padding: 8px 0;
     font-size: 14px;
-    margin-bottom: 10px;
     text-align: center;
 }
+.settings-text:not(:last-child) {
+    border-bottom: none;
+}
+
 .settings-text span {
     font-weight: bold;
 }
 
 .settings-input {
+    border: 1px solid #444;
+    box-sizing: content-box;
+    border-left-style: none;
+    border-right-style: none;
     display: flex;
     flex-direction: row-reverse;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    padding: 8px 0;
+}
+.settings-input:not(:last-child) {
+    border-bottom: none;
 }
 
 .settings-input input {
