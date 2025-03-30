@@ -629,7 +629,10 @@ function move() {
     if (AI_ENABLED) {
         // AI mode
         const bestMove = AI.getNextMove(snakeBody, apples[0]);
-        inputQueue.push(AI.directionToKey(bestMove));
+        if (inputQueue.length === 0) {
+            // Only push the AI move if the input queue is empty
+            inputQueue.push(bestMove);
+        }
         console.log('AI move:', bestMove);
         lastInputMethod = 'ai';
         lastInputTime = Date.now();
