@@ -626,12 +626,12 @@ function move() {
         return;
     }
     const head = snakeBody[0];
+    console.log('Input queue:', inputQueue);
     if (AI_ENABLED) {
         // AI mode
         const bestMove = AI.getNextMove(snakeBody, apples[0]);
         if (inputQueue.length === 0) {
-            // Only push the AI move if the input queue is empty
-            inputQueue.push(bestMove);
+            inputQueue.push(AI.directionToKey(bestMove));
         }
         console.log('AI move:', bestMove);
         lastInputMethod = 'ai';
@@ -798,6 +798,7 @@ GAME_TICK_INTERVAL_OPTION.onChange((value) => {
 
 const inputQueue = [] as string[];
 document.addEventListener('keydown', (e) => {
+    if (paused) return; // Prevent input when paused
     if (e.key.startsWith('Arrow')) {
         inputQueue.push(e.key);
         lastInputMethod = 'arrowKeys';

@@ -131,7 +131,7 @@ export function getBestMove(snake: Snake[], apple: Apple): Direction {
 
             // If no valid next move, penalize this path
             if (bestNextMove === null) {
-                currentScore -= 500;
+                currentScore -= 7000; // Penalize for dead end
                 break;
             }
 
