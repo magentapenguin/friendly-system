@@ -1,7 +1,7 @@
-// snake ai
+// snake ai - uses flood-fill space evaluation + wrapped distance for smarter pathing
 import { Snake } from './entities/snake';
 import type { Apple } from './entities/apple';
-import type { Direction, Position } from './types';
+import type { Direction } from './types';
 import { rows, columns } from './config';
 
 const directions: Direction[] = ['up', 'down', 'left', 'right'];
@@ -11,33 +11,31 @@ const oppositeDirections: Record<Direction, Direction> = {
     left: 'right',
     right: 'left',
 };
-let previousMoves: Direction[] = [];
 
-function getRandomDirection(exclude: Direction): Direction {
-    const availableDirections = directions.filter((dir) => dir !== exclude);
-    return availableDirections[
-        Math.floor(Math.random() * availableDirections.length)
-    ];
-}
-function getRandomDirectionWithWeight(
-    exclude: Direction,
-    weightedDirection: Direction,
-    weight: number = 0.5
-): Direction {
-    const randomValue = Math.random();
-    if (randomValue < weight) {
-        return weightedDirection;
-    } else {
-        return getRandomDirection(exclude);
-    }
+/**
+ * Calculate the shortest Manhattan distance on a wrapping grid.
+ */
+function wrappedDistance(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+): number {
+    const dx = Math.min(Math.abs(x1 - x2), columns - Math.abs(x1 - x2));
+    const dy = Math.min(Math.abs(y1 - y2), rows - Math.abs(y1 - y2));
+    return dx + dy;
 }
 
+/**
+ * Simulate moving the snake in a given direction (with wrapping).
+ * Returns a new snake array without mutating the original.
+ */
 function moveSnake(snake: Snake[], direction: Direction): Snake[] {
     const newSnake = deepcopySnake(snake);
     const head = getHead(newSnake);
 
-    const newHead = new Snake(head, true); // Create a new head
-    newHead.direction = direction; // Set the new direction
+    const newHead = new Snake(head, true);
+    newHead.direction = direction;
     switch (direction) {
         case 'up':
             newHead.y -= 1;
@@ -52,110 +50,203 @@ function moveSnake(snake: Snake[], direction: Direction): Snake[] {
             newHead.x += 1;
             break;
     }
-    if (newHead.x < 0) newHead.x = columns - 1; // Wrap around
-    if (newHead.x >= columns) newHead.x = 0; // Wrap around
-    if (newHead.y < 0) newHead.y = rows - 1; // Wrap around
-    if (newHead.y >= rows) newHead.y = 0; // Wrap around
-    newSnake.unshift(newHead); // Add the new head to the front
-    newSnake.pop(); // Remove the tail
+    if (newHead.x < 0) newHead.x = columns - 1;
+    if (newHead.x >= columns) newHead.x = 0;
+    if (newHead.y < 0) newHead.y = rows - 1;
+    if (newHead.y >= rows) newHead.y = 0;
+    newSnake.unshift(newHead);
+    newSnake.pop();
 
     return newSnake;
 }
 
-export function getBestMove(snake: Snake[], apple: Apple): Direction {
-    const lookAhead = Math.max(Math.floor(snake.length / 2), 2); // Look ahead half the snake's length
-    const possibleMoves: Direction[] = [];
-    const snakeCopy = deepcopySnake(snake);
-    const head = getHead(snakeCopy);
+/**
+ * Build a set of occupied positions from the snake body for O(1) lookup.
+ */
+function buildOccupiedSet(snake: Snake[]): Set<string> {
+    const set = new Set<string>();
+    for (const segment of snake) {
+        set.add(`${segment.x},${segment.y}`);
+    }
+    return set;
+}
 
-    // Check all possible moves
-    for (const direction of directions) {
-        // Check if the move is valid
-        if (!isCollision(snake, direction)) {
-            possibleMoves.push(direction);
+/**
+ * Flood-fill from the head position to count how many cells are reachable.
+ * This tells us how much "breathing room" the snake has after a move.
+ * Capped at a maximum to avoid expensive computation on large boards.
+ */
+function floodFillCount(snake: Snake[]): number {
+    const head = getHead(snake);
+    const occupied = buildOccupiedSet(snake);
+    // Don't count the head itself as blocked
+    occupied.delete(`${head.x},${head.y}`);
+
+    const maxCount = Math.min(rows * columns, snake.length * 3 + 20);
+    const visited = new Set<string>();
+    const queue: [number, number][] = [[head.x, head.y]];
+    visited.add(`${head.x},${head.y}`);
+    let count = 0;
+
+    while (queue.length > 0 && count < maxCount) {
+        const [cx, cy] = queue.shift()!;
+        count++;
+
+        for (const [dx, dy] of [
+            [0, -1],
+            [0, 1],
+            [-1, 0],
+            [1, 0],
+        ]) {
+            let nx = cx + dx;
+            let ny = cy + dy;
+            // Wrap around
+            if (nx < 0) nx = columns - 1;
+            if (nx >= columns) nx = 0;
+            if (ny < 0) ny = rows - 1;
+            if (ny >= rows) ny = 0;
+
+            const key = `${nx},${ny}`;
+            if (!visited.has(key) && !occupied.has(key)) {
+                visited.add(key);
+                queue.push([nx, ny]);
+            }
         }
     }
 
-    // Filter out opposite direction
-    const filteredMoves = possibleMoves.filter(
-        (move) => move !== oppositeDirections[head.direction]
+    return count;
+}
+
+/**
+ * Check if a move results in a collision with the snake's own body.
+ */
+function isCollision(snake: Snake[], direction: Direction): boolean {
+    const moved = moveSnake(snake, direction);
+    const head = getHead(moved);
+
+    for (let i = 1; i < moved.length; i++) {
+        if (moved[i].x === head.x && moved[i].y === head.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Evaluate a move by simulating it and scoring based on:
+ * 1. Wrapped distance to the apple (closer = better)
+ * 2. Available space via flood-fill (more space = safer)
+ * 3. Lookahead simulation for path viability
+ */
+function evaluateMove(
+    snake: Snake[],
+    direction: Direction,
+    apple: Apple
+): number {
+    const movedSnake = moveSnake(snake, direction);
+    const head = getHead(movedSnake);
+
+    // Base score: negative distance to apple (closer is better)
+    const dist = wrappedDistance(head.x, head.y, apple.x, apple.y);
+
+    // Bonus for reaching the apple
+    if (dist === 0) {
+        return 10000;
+    }
+
+    // Flood-fill to measure available space
+    const space = floodFillCount(movedSnake);
+
+    // If the available space is less than the snake's length, this is very dangerous
+    if (space < snake.length) {
+        return -10000 + space;
+    }
+
+    // Lookahead: simulate a few more greedy steps toward the apple
+    const lookAhead = Math.min(Math.max(Math.floor(snake.length / 2), 3), 8);
+    let currentSnake = movedSnake;
+    let pathScore = 0;
+    let reachedApple = false;
+
+    for (let step = 0; step < lookAhead; step++) {
+        let bestNextDir: Direction | null = null;
+        let bestNextDist = Infinity;
+
+        for (const nextDir of directions) {
+            if (isCollision(currentSnake, nextDir)) continue;
+            const nextSnake = moveSnake(currentSnake, nextDir);
+            const nextHead = getHead(nextSnake);
+            const nextDist = wrappedDistance(
+                nextHead.x,
+                nextHead.y,
+                apple.x,
+                apple.y
+            );
+            if (nextDist < bestNextDist) {
+                bestNextDist = nextDist;
+                bestNextDir = nextDir;
+            }
+        }
+
+        if (bestNextDir === null) {
+            // Dead end in lookahead — penalize
+            pathScore -= 500;
+            break;
+        }
+
+        currentSnake = moveSnake(currentSnake, bestNextDir);
+        if (bestNextDist === 0) {
+            reachedApple = true;
+            pathScore += 500;
+            break;
+        }
+    }
+
+    // Final score combines:
+    // - Distance to apple (weighted heavily, inverted so closer = higher)
+    // - Space available (safety factor)
+    // - Lookahead path viability
+    const maxDist = rows + columns; // approximate max possible wrapped distance
+    const distanceScore = (1 - dist / maxDist) * 100;
+    const spaceScore = Math.min(space / snake.length, 3) * 30;
+
+    return distanceScore + spaceScore + pathScore + (reachedApple ? 200 : 0);
+}
+
+/**
+ * Get the best move for the snake AI.
+ * Evaluates all valid moves and picks the one with the highest score.
+ */
+export function getBestMove(snake: Snake[], apple: Apple): Direction {
+    const head = getHead(snake);
+
+    // Get all valid (non-colliding) moves
+    const validMoves = directions.filter((dir) => !isCollision(snake, dir));
+
+    // Filter out the opposite direction (can't reverse)
+    const preferredMoves = validMoves.filter(
+        (dir) => dir !== oppositeDirections[head.direction]
     );
 
-    let bestMove: Direction | null = null;
-    let bestScore = -Infinity;
-    console.group('AI: Possible Moves');
-
-    // Use filtered moves if available, otherwise use original possibleMoves
     const movesToEvaluate =
-        filteredMoves.length > 0 ? filteredMoves : possibleMoves;
+        preferredMoves.length > 0 ? preferredMoves : validMoves;
 
-    for (const initialMove of movesToEvaluate) {
-        // Simulate the initial move
-        let currentSnake = moveSnake(snakeCopy, initialMove);
-        let currentScore = 0;
+    if (movesToEvaluate.length === 0) {
+        // No valid moves at all — just go forward
+        return head.direction;
+    }
 
-        // Simulate looking ahead
-        for (let step = 0; step < lookAhead; step++) {
-            const currentHead = getHead(currentSnake);
-            const distance =
-                Math.abs(currentHead.x - apple.x) +
-                Math.abs(currentHead.y - apple.y);
+    let bestMove: Direction = movesToEvaluate[0];
+    let bestScore = -Infinity;
 
-            // Score based on distance (closer is better)
-            currentScore -= distance;
-
-            // If we reach the apple, give bonus points and stop simulating
-            if (distance === 0) {
-                currentScore += 1000;
-                break;
-            }
-
-            // Find the best next move (the one that gets closest to the apple)
-            let bestNextMove: Direction | null = null;
-            let bestNextDistance = Infinity;
-
-            for (const nextMove of directions) {
-                if (isCollision(currentSnake, nextMove)) continue;
-
-                const nextSnake = moveSnake(currentSnake, nextMove);
-                const nextHead = getHead(nextSnake);
-                const nextDistance =
-                    Math.abs(nextHead.x - apple.x) +
-                    Math.abs(nextHead.y - apple.y);
-
-                if (nextDistance < bestNextDistance) {
-                    bestNextDistance = nextDistance;
-                    bestNextMove = nextMove;
-                }
-            }
-
-            // If no valid next move, penalize this path
-            if (bestNextMove === null) {
-                currentScore = -Infinity; // Penalize for dead end
-                break;
-            }
-
-            // Make the best next move
-            currentSnake = moveSnake(currentSnake, bestNextMove);
-        }
-
-        console.log(`AI: Move ${initialMove} has score ${currentScore}`);
-        if (currentScore > bestScore) {
-            bestScore = currentScore;
-            bestMove = initialMove;
+    for (const move of movesToEvaluate) {
+        const score = evaluateMove(snake, move, apple);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
         }
     }
 
-    // If no valid moves are found, return a random direction
-    if (bestMove === null) {
-        console.warn('AI: No valid moves found, returning random direction');
-        console.groupEnd();
-        return getRandomDirectionWithWeight(
-            head.direction,
-            oppositeDirections[head.direction]
-        );
-    }
-    console.groupEnd();
     return bestMove;
 }
 
@@ -167,58 +258,11 @@ function getHead(snake: Snake[]): Snake {
     return snake.at(0) as Snake;
 }
 
+/**
+ * Main entry point for the AI. Returns the best direction to move.
+ */
 export function getNextMove(snake: Snake[], apple: Apple): Direction {
-    const directionToApple = getBestMove(snake, apple);
-
-    let nextDirection = directionToApple;
-
-    // Ensure the new direction will not collide with the snake's body
-    let iters = 0;
-    while (isCollision(snake, nextDirection)) {
-        iters++;
-        if (iters > 10) {
-            console.error('AI: Too many iterations, returning relative right');
-            // find a relative right direction
-            const currentDirection = snake[0].direction;
-            if (currentDirection === 'up') {
-                nextDirection = 'right';
-            } else if (currentDirection === 'down') {
-                nextDirection = 'left';
-            } else if (currentDirection === 'left') {
-                nextDirection = 'up';
-            } else if (currentDirection === 'right') {
-                nextDirection = 'down';
-            }
-            break;
-        }
-        nextDirection = getRandomDirectionWithWeight(
-            snake[0].direction,
-            oppositeDirections[snake[0].direction]
-        );
-        console.log(
-            'AI: Collision detected, trying new direction:',
-            nextDirection
-        );
-    }
-    previousMoves.push(nextDirection);
-
-    return nextDirection;
-}
-
-function isCollision(snake: Snake[], newDirection: Direction): boolean {
-    snake = moveSnake(snake, newDirection);
-    const head = getHead(snake);
-
-    // Check if the new head position collides with the snake's body
-    for (let i = 0; i < snake.length; i++) {
-        if (snake[i] === head) {
-            continue; // Skip the head itself
-        }
-        if (snake[i].x === head.x && snake[i].y === head.y) {
-            return true; // Collision detected
-        }
-    }
-    return false; // No collision
+    return getBestMove(snake, apple);
 }
 
 export function directionToKey(direction: Direction): string {
