@@ -12,6 +12,24 @@ const oppositeDirections: Record<Direction, Direction> = {
     right: 'left',
 };
 
+// Scoring constants
+const APPLE_REACHED_SCORE = 10000;
+const INSUFFICIENT_SPACE_PENALTY = -10000;
+const DEAD_END_PENALTY = 500;
+const APPLE_REACHED_IN_LOOKAHEAD_BONUS = 500;
+const APPLE_REACHABLE_BONUS = 200;
+const DISTANCE_WEIGHT = 100;
+const SPACE_WEIGHT = 30;
+
+// Flood-fill constants
+const SPACE_MULTIPLIER = 3; // How many times the snake length we explore
+const BASE_SPACE_BUFFER = 20; // Minimum extra cells to explore
+const MAX_SPACE_RATIO = 3; // Cap for space-to-length ratio benefit
+
+// Lookahead constants
+const MIN_LOOKAHEAD = 3;
+const MAX_LOOKAHEAD = 8;
+
 /**
  * Calculate the shortest Manhattan distance on a wrapping grid.
  */
@@ -82,7 +100,10 @@ function floodFillCount(snake: Snake[]): number {
     // Don't count the head itself as blocked
     occupied.delete(`${head.x},${head.y}`);
 
-    const maxCount = Math.min(rows * columns, snake.length * 3 + 20);
+    const maxCount = Math.min(
+        rows * columns,
+        snake.length * SPACE_MULTIPLIER + BASE_SPACE_BUFFER
+    );
     const visited = new Set<string>();
     const queue: [number, number][] = [[head.x, head.y]];
     visited.add(`${head.x},${head.y}`);
@@ -151,7 +172,7 @@ function evaluateMove(
 
     // Bonus for reaching the apple
     if (dist === 0) {
-        return 10000;
+        return APPLE_REACHED_SCORE;
     }
 
     // Flood-fill to measure available space
@@ -159,11 +180,14 @@ function evaluateMove(
 
     // If the available space is less than the snake's length, this is very dangerous
     if (space < snake.length) {
-        return -10000 + space;
+        return INSUFFICIENT_SPACE_PENALTY + space;
     }
 
     // Lookahead: simulate a few more greedy steps toward the apple
-    const lookAhead = Math.min(Math.max(Math.floor(snake.length / 2), 3), 8);
+    const lookAhead = Math.min(
+        Math.max(Math.floor(snake.length / 2), MIN_LOOKAHEAD),
+        MAX_LOOKAHEAD
+    );
     let currentSnake = movedSnake;
     let pathScore = 0;
     let reachedApple = false;
@@ -190,14 +214,14 @@ function evaluateMove(
 
         if (bestNextDir === null) {
             // Dead end in lookahead — penalize
-            pathScore -= 500;
+            pathScore -= DEAD_END_PENALTY;
             break;
         }
 
         currentSnake = moveSnake(currentSnake, bestNextDir);
         if (bestNextDist === 0) {
             reachedApple = true;
-            pathScore += 500;
+            pathScore += APPLE_REACHED_IN_LOOKAHEAD_BONUS;
             break;
         }
     }
@@ -207,10 +231,16 @@ function evaluateMove(
     // - Space available (safety factor)
     // - Lookahead path viability
     const maxDist = rows + columns; // approximate max possible wrapped distance
-    const distanceScore = (1 - dist / maxDist) * 100;
-    const spaceScore = Math.min(space / snake.length, 3) * 30;
+    const distanceScore = (1 - dist / maxDist) * DISTANCE_WEIGHT;
+    const spaceScore =
+        Math.min(space / snake.length, MAX_SPACE_RATIO) * SPACE_WEIGHT;
 
-    return distanceScore + spaceScore + pathScore + (reachedApple ? 200 : 0);
+    return (
+        distanceScore +
+        spaceScore +
+        pathScore +
+        (reachedApple ? APPLE_REACHABLE_BONUS : 0)
+    );
 }
 
 /**
